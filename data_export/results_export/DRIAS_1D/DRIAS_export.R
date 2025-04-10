@@ -30,6 +30,15 @@ library(dplyr)
 library(ncdf4)
 computer = Sys.info()["nodename"]
 
+if (grepl("LGA-LYP6123", computer)) {
+    out_dir = "NetCDF"
+    script_dirpath = "."
+    data_dirpath = "/media/lheraut/lhrt_ext/archive/Documents/INRAE/data/Explore2/hydrologie/projection_merge"
+    results_dirpath = "/media/lheraut/lhrt_ext/archive/Documents/INRAE/projects/Explore2_project/Explore2_toolbox/results/projection/hydrologie"
+    MPI = "file"
+}
+
+
 if (grepl("botan", computer)) {
     out_dir = "NetCDF"
     script_dirpath = "."
@@ -101,16 +110,19 @@ if (MPI != "") {
 
 ## INTRO _____________________________________________________________
 Variable = c(
-    "^Q05A$", "^Q10A$", "^QJXA$", "^tQJXA$", "^VCX3$", "^tVCX3$",
-    "^VCX10$", "^tVCX10$", "^dtFlood$",
+    # "^Q05A$", "^Q10A$", "^QJXA$", "^tQJXA$", "^VCX3$", "^tVCX3$",
+    # "^VCX10$", "^tVCX10$", "^dtFlood$",
     
-    "^Q50A$", "^QA$", "^QMA_", "^QSA_",
+    # "^Q50A$", "^QA$", "^QMA_", "^QSA_",
     
-    "^Q95A$", "^Q90A$", "^QMNA$",
-    "^VCN3$", "^VCN10$", "^VCN30$",
-    "^startLF$", "^centerLF$", "^dtLF$",
-    "^VCN3_summer$", "^VCN10_summer$", "^VCN30_summer$",
-    "^startLF_summer$", "^centerLF_summer$", "^dtLF_summer$")
+    # "^Q95A$", "^Q90A$", "^QMNA$",
+    # "^VCN3$", "^VCN10$", "^VCN30$",
+    # "^startLF$", "^centerLF$", "^dtLF$",
+    # "^VCN3_summer$", "^VCN10_summer$", "^VCN30_summer$",
+    # "^startLF_summer$", "^centerLF_summer$", "^dtLF_summer$"
+    
+    "^endLF$", "^endLF_summer$"
+)
 Variable_pattern = paste0("(", paste0(Variable, collapse=")|("), ")")
 Variable_hyr = c("QJXA", "tQJXA", "tVCX3", "VCN10", "VCN3", "VCX3")
 
@@ -567,6 +579,7 @@ for (i in 1:nChain_dirpath) {
         ### end verif ###
     }
     ncdf4::nc_close(NC)
+    post("")
 }
 
 

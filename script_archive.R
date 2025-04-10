@@ -140,7 +140,7 @@ to_archive = c(
 
     ## proj
     ### climatological-projection
-    "climatological-projection_daily-time-series_by-chain_netcdf" #B
+    # "climatological-projection_daily-time-series_by-chain_netcdf" #B
     # "climatological-projection_hourly-time-series_by-chain_netcdf",
 
     ### hydrological-projection
@@ -153,7 +153,7 @@ to_archive = c(
     # "hydrological-projection_series-by-horizon_by-code_fst" #B
     # "hydrological-projection_changes-by-horizon_by-chain_fst", #B
     # "hydrological-projection_changes-by-horizon_by-code_fst" #B
-    # "hydrological-projection_yearly-variables_by-chain_netcdf" #B
+    "hydrological-projection_yearly-variables_by-chain_netcdf" #B
     # "hydrological-projection_yearly-variables_by-chain_fst" #B
     # "hydrological-projection_yearly-variables_by-code_fst" #B
     # "hydrological-projection_daily-variables_by-chain_fst" #A
@@ -161,15 +161,19 @@ to_archive = c(
 
 
 ## Work Paths ________________________________________________________
-archive_base_dir = "/media/louis/Explore2"
-local_resdir = "results"
+archive_base_dir = "/media/lheraut/Explore2"
+local_resdir =
+    # "results"
+    "/media/lheraut/lhrt_ext/archive/Documents/INRAE/projects/Explore2_project/Explore2_toolbox/results"
 local_resources_dir = "resources"
-external_resdir = "/media/louis/SUPER_LOU/archive/project/Explore2_project/Explore2_toolbox/results"
-external_datadir = "/media/louis/SUPER_LOU/archive/data/Explore2/hydrologie"
+external_resdir =
+    # "/media/lheraut/SUPER_LOU/archive/project/Explore2_project/Explore2_toolbox/results"
+    "/media/lheraut/Explore2/"
+external_datadir = "/media/lheraut/SUPER_LOU/archive/data/Explore2/hydrologie"
 
 example_projection_dir = "CTRIP/CNRM-CM5_historical-rcp26_ALADIN63_ADAMONT_CTRIP"
 
-URL_DRIAS_file = "URL_DRIAS.txt" 
+URL_DRIAS_file = "URL_DRIAS.txt"
 output_DRIAS_dir = "output_DRIAS"
 
 ## Meta variables ____________________________________________________
@@ -493,10 +497,10 @@ get_data_archive = function (archive_dir, From,
                                       dplyr::all_of(c(ID_names,
                                                       variables_h)))
                     ASHE::write_tibble(dataEX_variable,
-                                       filedir=file.path(archive_base_dir,
+                                       path=file.path(archive_base_dir,
                                                          archive_dir,
-                                                         dirpath),
-                                       filename=paste0(variable, ".fst"))
+                                                      dirpath,
+                                                      paste0(variable, ".fst")))
                     
                 }
             }
@@ -526,10 +530,10 @@ get_meta_archive = function (archive_dir,
             }
             dirpath = Dirpaths[i]
             ASHE::write_tibble(meta_variables,
-                               filedir=file.path(archive_base_dir,
-                                                 archive_dir,
-                                                 dirpath),
-                               filename="meta_variables.csv")
+                               path=file.path(archive_base_dir,
+                                              archive_dir,
+                                              dirpath,
+                                              "meta_variables.csv"))
         }
     }
 
@@ -546,10 +550,10 @@ get_meta_archive = function (archive_dir,
             meta_chains_tmp2 = meta_chains_tmp
         }
         ASHE::write_tibble(meta_chains_tmp2,
-                           filedir=file.path(archive_base_dir,
-                                             archive_dir,
-                                             dirpath),
-                           filename="meta_chains.csv")
+                           path=file.path(archive_base_dir,
+                                          archive_dir,
+                                          dirpath,
+                                          "meta_chains.csv"))
     }
 
     print("archive meta codes")
@@ -574,10 +578,10 @@ get_meta_archive = function (archive_dir,
             meta_codes_tmp = dplyr::filter(meta_codes, code
                                            %in% Code_tmp)
             ASHE::write_tibble(meta_codes_tmp,
-                               filedir=file.path(archive_base_dir,
-                                                 archive_dir,
-                                                 dirpath),
-                               filename="meta_codes.csv")
+                               path=file.path(archive_base_dir,
+                                              archive_dir,
+                                              dirpath,
+                                              "meta_codes.csv"))
         }
     }
 }
@@ -587,12 +591,12 @@ get_meta_archive = function (archive_dir,
 if (download_DRIAS) {
     options(timeout=300)
     URLs = readLines(file.path(local_resources_dir, URL_DRIAS_file))
-output_dir = file.path(archive_base_dir, output_DRIAS_dir)
+    output_dir = file.path(archive_base_dir, output_DRIAS_dir)
     if (!dir.exists(output_dir)) {
         dir.create(output_dir, showWarnings=FALSE)
     }
     nURL = length(URLs)
-    start = 86
+    start = 1
     for (i in start:nURL) {
         url = URLs[i]
         print(paste0(i, "/", nURL, " -> ",
@@ -776,14 +780,13 @@ if (archive_dir %in% to_archive) {
     get_data_archive(archive_dir, From,
                      by="chain")
 
-
     meta_variables = meta_variables_serie
     Variables_table = 
         c("centerLF_summer"="centerLF_seas-MJJASON",
-          "centerLF"="centerLF_yr",
+          "centerLF$"="centerLF_yr",
           "dtFlood"="dtFlood_yr",
           "dtLF_summer"="dtLF_seas-MJJASON",
-          "dtLF"="dtLF_yr",
+          "dtLF$"="dtLF_yr",
           "Q05A"="Q05A_yr",
           "Q10A"="Q10A_yr",
           "Q50A"="Q50A_yr",
@@ -796,17 +799,19 @@ if (archive_dir %in% to_archive) {
           "QSA_SON"="QA_seas-SON",
           "QA"="QA_yr",
           "QJXA"="QJXA_hyr",
-          "QMNA"="QMNA_yr",
+          "QMNA$"="QMNA_yr",
           "startLF_summer"="startLF_seas-MJJASON",
-          "startLF"="startLF_yr",
+          "startLF$"="startLF_yr",
+          "endLF_summer"="endLF_seas-MJJASON",
+          "endLF$"="endLF_yr",
           "tQJXA"="tQJXA_hyr",
           "tVCX10"="tVCX10_yr",
           "tVCX3"="tVCX3_hyr",
-          "VCN10"="VCN10_hyr",
+          "^VCN10$"="VCN10_hyr",
           "VCN10_summer"="VCN10_seas-MJJASON",
           "VCN30_summer"="VCN30_seas-MJJASON",
-          "VCN10"="VCN30_yr",
-          "VCN3"="VCN3_hyr",
+          "VCN30$"="VCN30_yr",
+          "VCN3$"="VCN3_hyr",
           "VCN3_summer"="VCN3_seas-MJJASON",
           "VCX10"="VCX10_yr",
           "VCX3"="VCX3_hyr")
