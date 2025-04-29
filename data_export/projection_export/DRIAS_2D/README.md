@@ -4,7 +4,7 @@
 ### Avant propos
 L'objectif de ce code est de simplifier l'export de donnée [NetCDF](https://fr.wikipedia.org/wiki/NetCDF) pour le portail [DRIAS](http://www.drias-climat.fr/accompagnement/sections/311) des données hydro-climatiques de [Explore2](https://professionnels.ofb.fr/fr/node/1244). 
 
-L'ensemble de ce code et des informations qu'il contient on été tiré du pdf [Format_NetCDF_2D_Hydro_Portail-DRIAS_v2022.08.pdf](https://github.com/super-lou/Explore2_toolbox/blob/main/resources/Format_NetCDF_2D_Hydro_Portail-DRIAS_v2022.08.pdf) fourni dans le cadre du projet [Explore2](https://professionnels.ofb.fr/fr/node/1244). L'organisation du document a été modifié pour rendre son appréhension la plus aisée possible compte tenu de sa transformation en code R.
+L'ensemble de ce code et des informations qu'il contient on été tiré du pdf [Format_NetCDF_2D_Hydro_Portail-DRIAS_v2022.08.pdf](https://github.com/louis-heraut/Explore2_toolbox/blob/main/resources/Format_NetCDF_2D_Hydro_Portail-DRIAS_v2022.08.pdf) fourni dans le cadre du projet [Explore2](https://professionnels.ofb.fr/fr/node/1244). L'organisation du document a été modifié pour rendre son appréhension la plus aisée possible compte tenu de sa transformation en code R.
 
 Il peut évidemment se trouver des incohérences donc il ne faut pas hésiter à me contacter (Louis Héraut). Pour des problèmes de compréhesion, il est aussi possible que Flore Tocquer soit plus à même de donner des éléments de réponse.
 
@@ -109,10 +109,10 @@ Voir aussi :
 Le plus simple est de télécharger l'intégralité du repository github associé et de retrouver ces fichiers en suivant le chemin *help/projection_export/DRIAS_2D* afin de pouvoir les modifiers et les exécuter. Pour cela, il est possible de le faire en ligne de commande : 
 
 ``` 
-git clone https://github.com/super-lou/Explore2_toolbox
+git clone https://github.com/louis-heraut/Explore2_toolbox
 ```
 
-Ou alors en le téléchargeant en *zip* avec le lien suivant [Explore2_toolbox-main.zip](https://github.com/super-lou/Explore2_toolbox/archive/refs/heads/main.zip).
+Ou alors en le téléchargeant en *zip* avec le lien suivant [Explore2_toolbox-main.zip](https://github.com/louis-heraut/Explore2_toolbox/archive/refs/heads/main.zip).
 
 
 ### Structure
@@ -154,6 +154,6 @@ Le découpage de ces scripts est réalisé de sorte à simplifier la compréhens
 ### Scripts d'exécution
 Les modifications de ce script nommé *DRIAS_export.R* ne sont pas recommandées puisque c'est lui qui gère la création interne à R du NetCDF. Il est donc préférable de simplement exécuter entièrement ce script une fois que les scripts d'information sont remplis comme voulu.
 
-Si vous voulez utiliser ce processu de création de NetCDF dans un autre contexte et de manière plus fine, vous pouvez trouver l'ensemble de la documentation du package R [NCf sur sa page github associée](https://github.com/super-lou/NCf).
+Si vous voulez utiliser ce processu de création de NetCDF dans un autre contexte et de manière plus fine, vous pouvez trouver l'ensemble de la documentation du package R [NCf sur sa page github associée](https://github.com/louis-heraut/NCf).
 
 Son exécution sans modifications préalable des scripts d'information produit un résultat générique avec les exemples pré-remplis.
