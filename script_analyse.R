@@ -154,7 +154,7 @@ if ('analyse_data' %in% to_do) {
                             filter(dataEX,
                                    futur[1] <= date &
                                    date <= futur[2]),
-                            code),
+                            code), ###### ?????????????????????
                             futur=mean(get(var), na.rm=TRUE),
                             .groups="drop"),
                         by=c("code"))
