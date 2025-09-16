@@ -88,15 +88,20 @@
 #
 #              axis : Axe associé à la variable
 
-if (!is_delta) {
+
+
+
+
+
+if ("date" %in% names(dataEX)) {
     if (is_TRACC) {
+        nYear = length(unique(lubridate::year(Date)))
         if (timestep == "year") {
-            from = as.Date("2201-01-01") # min(Date)
-            to = as.Date("2220-01-01") # max(Date)
-            
+            from = as.Date("2201-01-01")
+            to = as.Date(paste0(2201+nYear-1, "-01-01"))
         } else if (timestep == "month") {
-            from = as.Date("2201-01-01") # min(Date)
-            to = as.Date("2220-12-31") # max(Date)
+            from = as.Date("2201-01-01")
+            to = as.Date(paste0(2201+nYear-1, "-12-31"))
         } else {
             stop ("timestep not define")
         }

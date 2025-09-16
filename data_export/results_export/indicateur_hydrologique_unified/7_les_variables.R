@@ -55,21 +55,21 @@
 
 ## 1. SAMPLING PERIOD ________________________________________________
 # if (!is_delta) {
-    NCf$sampling_period.name = "sampling_period"
-    NCf$sampling_period.dimension = "sampling_period_strlen, station"
-    NCf$sampling_period.precision = "char"
-    if (grepl(Month_pattern, var)) {
-        NCf$sampling_period.value = rep("each month", length(Code))
-    } else if (!tibble::is_tibble(SamplingPeriod)) {
-        NCf$sampling_period.value = rep(SamplingPeriod, length(Code))
-    } else {
-        NCf$sampling_period.value = paste0("from ", SamplingPeriod$start,
-                                           " to ", SamplingPeriod$end)
-    }
-    NCf$sampling_period.01.long_name = "sampling period"
-    NCf$sampling_period_strlen.name = "sampling_period_strlen"
-    NCf$sampling_period_strlen.value = 1:max(nchar(NCf$sampling_period.value))
-    NCf$sampling_period_strlen.is_nchar_dimension = TRUE
+NCf$sampling_period.name = "sampling_period"
+NCf$sampling_period.dimension = "sampling_period_strlen, station"
+NCf$sampling_period.precision = "char"
+if (grepl(Month_pattern, var)) {
+    NCf$sampling_period.value = rep("each month", length(Code))
+} else if (!tibble::is_tibble(SamplingPeriod)) {
+    NCf$sampling_period.value = rep(SamplingPeriod, length(Code))
+} else {
+    NCf$sampling_period.value = paste0("from ", SamplingPeriod$start,
+                                       " to ", SamplingPeriod$end)
+}
+NCf$sampling_period.01.long_name = "sampling period"
+NCf$sampling_period_strlen.name = "sampling_period_strlen"
+NCf$sampling_period_strlen.value = 1:max(nchar(NCf$sampling_period.value))
+NCf$sampling_period_strlen.is_nchar_dimension = TRUE
 # }
 
 
@@ -78,12 +78,12 @@
 assign(paste0(metaEX_var$variable_en, ".name"),
        metaEX_var$variable_en, envir=NCf)
 
-if (is_delta) {
-    assign(paste0(metaEX_var$variable_en, ".dimension"),
-           "station", envir=NCf)
-} else {
+if ("date" %in% names(dataEX)) {
     assign(paste0(metaEX_var$variable_en, ".dimension"),
            "station, time", envir=NCf)
+} else {
+    assign(paste0(metaEX_var$variable_en, ".dimension"),
+           "station", envir=NCf)
 }
 
 assign(paste0(metaEX_var$variable_en, ".precision"),

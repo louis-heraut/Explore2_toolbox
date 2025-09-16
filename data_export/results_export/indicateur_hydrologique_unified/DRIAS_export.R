@@ -56,9 +56,9 @@ Variable = c(
     # "QJXA_yr", "VCX10_yr", "VCX3_yr",
     # "tQJXA_yr", "tVCX10_yr", "tVCX3_yr",
     # "dtFlood_yr",
-    "QA_yr"
-    # "QS_",
-    # "QM_",
+    # "QA_yr",
+    # "QS_"
+    "QM_"
     # "QMNA",
     # "startLF_summer", "centerLF_summer", "endLF_summer", 
     # "startLF", "centerLF", "endLF",
@@ -395,7 +395,8 @@ filter_code = function (dataEX) {
     return (dataEX)
 }
 
-stop()
+
+# stop()
 
 
 ## PROCESS ___________________________________________________________
@@ -496,7 +497,15 @@ for (i in 1:nChain_dirpath) {
 
         for (k in 1:nVar_path_list) {
             var = names(Var_path_list)[k]
-            var_h = paste0(var, "_", futur)
+            if (is_TRACC) {
+                if (is_delta) {
+                    var_rwl = paste0(var, "_", rwl)
+                }
+            } else {
+                if (is_delta) {
+                    var_h = paste0(var, "_", futur)
+                }
+            }
             var_path = Var_path_list[[k]]
 
             post(paste0("*** ", k, " -> ",
@@ -508,7 +517,12 @@ for (i in 1:nChain_dirpath) {
             }
 
             if (is_TRACC) {
-                Ok_meta = grepl(var, metaEX_ALL$variable_en)
+                if (is_delta) {
+                    Ok_meta = grepl(rwl, metaEX_ALL$variable_en) &
+                        grepl(var, metaEX_ALL$variable_en)
+                } else {
+                    Ok_meta = grepl(var, metaEX_ALL$variable_en)
+                }
             } else {
                 if (is_delta) {
                     Ok_meta = grepl(futur, metaEX_ALL$variable_en) &
@@ -553,32 +567,55 @@ for (i in 1:nChain_dirpath) {
                                                var_month_file)
                     
                     if (is_delta) {
-                        dataEX_tmp_list = lapply(var_month_path, ASHE::read_tibble)
-                        dataEX_tmp = purrr::reduce(dataEX_tmp_list, dplyr::bind_rows)
+                        dataEX_tmp_list = lapply(var_month_path,
+                                                 ASHE::read_tibble)
+                        dataEX_tmp = purrr::reduce(dataEX_tmp_list,
+                                                   dplyr::bind_rows)
                         dataEX_tmp = add_chain(dataEX_tmp)
                         dataEX_tmp = filter_code(dataEX_tmp)
                         if (is_TRACC) {
-                            groups = c("GWL", "EXP", "GCM", "RCM",
-                                       "BC", "date", "code")
+                            var_month_rwl = paste0(var_month, "_", rwl)
+                            dataEX_tmp =
+                                dplyr::rename(dataEX_tmp,
+                                              !!var_month:=var_month_rwl)
                         } else {
-                            groups = c("EXP", "GCM", "RCM",
-                                       "BC", "date", "code")
+                            var_month_h = paste0(var_month, "_", futur)
+                            dataEX_tmp =
+                                dplyr::rename(dataEX_tmp,
+                                              !!var_month:=var_month_h)
                         }
-                        dataEX_tmp =
+                        dataEX_tmp = 
                             dplyr::summarise(
                                        dplyr::group_by(dataEX_tmp,
-                                                       dplyr::across(all_of(groups))),
+                                                       code, EXP, GCM,
+                                                       RCM, BC),
                                        !!var_month:=mean(get(var_month),
                                                          na.rm=TRUE),
                                        .groups="drop")
+                        dataEX_tmp = 
+                            dplyr::summarise(dplyr::group_by(dataEX_tmp,
+                                                             code, EXP,
+                                                             GCM, RCM),
+                                             !!var_month:=mean(get(var_month),
+                                                               na.rm=TRUE),
+                                             .groups="drop")
+                        dataEX_tmp = 
+                            dplyr::summarise(dplyr::group_by(dataEX_tmp,
+                                                             code, EXP),
+                                             !!var_month:=mean(get(var_month),
+                                                               na.rm=TRUE),
+                                             .groups="drop")
+                        id_month = which(Month == gsub(".*[_]", "", var_month))
+                        dataEX_tmp$date =
+                            as.Date(paste0("1970-", id_month, "-01"))
+                        
                     } else {
                         dataEX_tmp = ASHE::read_tibble(var_month_path)
                         dataEX_tmp = add_chain(dataEX_tmp)
                         dataEX_tmp = filter_code(dataEX_tmp)
-                    }
-                        
-                    if (!is_TRACC) { 
-                        dataEX_tmp = debug_years(dataEX_tmp)
+                        if (!is_TRACC) {
+                            dataEX_tmp = debug_years(dataEX_tmp)
+                        }
                     }
                     dataEX_tmp =
                         dplyr::rename(dataEX_tmp,
@@ -588,7 +625,6 @@ for (i in 1:nChain_dirpath) {
                         dplyr::bind_rows(dataEX, dataEX_tmp)
                 }
                 dataEX = dplyr::arrange(dataEX, code, date)
-                dataEX_save = dataEX
                 is_month_done = TRUE
                 timestep = "month"
 
@@ -598,38 +634,36 @@ for (i in 1:nChain_dirpath) {
                     dataEX = purrr::reduce(dataEX_list, dplyr::bind_rows)
                     dataEX = add_chain(dataEX)
                     dataEX = filter_code(dataEX)
-                    dataEX = dplyr::rename(dataEX, !!var:=var_h)
-                    dataEX_save = dataEX
                     if (is_TRACC) {
-                        dataEX = dataEX ################
+                        dataEX = dplyr::rename(dataEX, !!var:=var_rwl)
                     } else {
-                        dataEX = 
-                            dplyr::summarise(
-                                       dplyr::group_by(dataEX,
-                                                       code, EXP, GCM,
-                                                       RCM, BC),
-                                       !!var:=mean(get(var),
-                                                   na.rm=TRUE),
-                                       .groups="drop")
-                        dataEX = 
-                            dplyr::summarise(dplyr::group_by(dataEX,
-                                                             code, EXP,
-                                                             GCM, RCM),
-                                             !!var:=mean(get(var),
-                                                         na.rm=TRUE),
-                                             .groups="drop")
-                        dataEX = 
-                            dplyr::summarise(dplyr::group_by(dataEX,
-                                                             code, EXP),
-                                             !!var:=mean(get(var),
-                                                         na.rm=TRUE),
-                                             .groups="drop")
+                        dataEX = dplyr::rename(dataEX, !!var:=var_h)
                     }
+                    dataEX = 
+                        dplyr::summarise(
+                                   dplyr::group_by(dataEX,
+                                                   code, EXP, GCM,
+                                                   RCM, BC),
+                                   !!var:=mean(get(var),
+                                               na.rm=TRUE),
+                                   .groups="drop")
+                    dataEX = 
+                        dplyr::summarise(dplyr::group_by(dataEX,
+                                                         code, EXP,
+                                                         GCM, RCM),
+                                         !!var:=mean(get(var),
+                                                     na.rm=TRUE),
+                                         .groups="drop")
+                    dataEX = 
+                        dplyr::summarise(dplyr::group_by(dataEX,
+                                                         code, EXP),
+                                         !!var:=mean(get(var),
+                                                     na.rm=TRUE),
+                                         .groups="drop")
                 } else {
                     dataEX = ASHE::read_tibble(var_path)
                     dataEX = add_chain(dataEX)
                     dataEX = filter_code(dataEX)
-                    dataEX_save = dataEX
                 }
 
                 sampling_period =
@@ -695,13 +729,14 @@ for (i in 1:nChain_dirpath) {
                 metaEX_var$variable_en = var_no_pattern
                 dataEX = dplyr::rename(dataEX, !!var_no_pattern:=var)
             }
-            
+
+            if ("date" %in% names(dataEX)) {
+                Date = dataEX$date
+                Date = seq.Date(min(Date), max(Date), by=timestep)
+            }
 
             if (is_TRACC) {
                 if (!is_delta) {
-                    Date = dataEX_save$date
-                    Date = seq.Date(min(Date), max(Date), by=timestep)
-                    
                     Year_range = range(lubridate::year(Date))
                     duration = Year_range[2] - Year_range[1] + 1
                     if (duration < 20 & !is_delta) {
@@ -732,12 +767,20 @@ for (i in 1:nChain_dirpath) {
             Code = levels(factor(dataEX$code))
 
             if (is_delta) {
-                # dataEX_matrix =
-                #     dplyr::select(dataEX, code,
-                #                   dplyr::all_of(var_no_pattern))
-                # dataEX_matrix = dplyr::select(dataEX_matrix, -code)
-                # dataEX_matrix = as.matrix(dataEX_matrix)
-                dataEX_matrix = dataEX[[var_no_pattern]]
+                if (grepl(Month_pattern, var)) {
+                    dataEX_matrix =
+                        dplyr::select(dataEX, code, date,
+                                      dplyr::all_of(var_no_pattern))
+                    dataEX_matrix =
+                        tidyr::pivot_wider(dataEX_matrix,
+                                           names_from=code,
+                                           values_from=
+                                               dplyr::all_of(var_no_pattern))
+                    dataEX_matrix = dplyr::select(dataEX_matrix, -date)
+                    dataEX_matrix = t(as.matrix(dataEX_matrix))
+                } else {
+                    dataEX_matrix = dataEX[[var_no_pattern]]   
+                }
             } else {
                 dataEX_matrix =
                     dplyr::select(dataEX, code, date,
@@ -825,37 +868,34 @@ for (i in 1:nChain_dirpath) {
                                             dplyr::bind_rows)
                 dataEX_test = add_chain(dataEX_test)
                 dataEX_test = filter_code(dataEX_test)
-                dataEX_test = dplyr::rename(dataEX_test, !!var:=var_h)
-                # if (!grepl("QMA_apr", var)) {
-                    # dataEX_test$date =
-                        # as.Date(paste0(lubridate::year(dataEX_test$date),
-                                       # "-01-01"))
-                # }
                 if (is_TRACC) {
-                    dataEX = dataEX ################
+                    dataEX_test = dplyr::rename(dataEX_test,
+                                                !!var:=var_rwl)
                 } else {
-                    dataEX_test = 
-                        dplyr::summarise(
-                                   dplyr::group_by(dataEX_test,
-                                                   code, EXP, GCM,
-                                                   RCM, BC),
-                                   !!var:=mean(get(var),
-                                               na.rm=TRUE),
-                                   .groups="drop")
-                    dataEX_test = 
-                        dplyr::summarise(dplyr::group_by(dataEX_test,
-                                                         code, EXP,
-                                                         GCM, RCM),
-                                         !!var:=mean(get(var),
-                                                     na.rm=TRUE),
-                                         .groups="drop")
-                    dataEX_test = 
-                        dplyr::summarise(dplyr::group_by(dataEX_test,
-                                                         code, EXP),
-                                         !!var:=mean(get(var),
-                                                     na.rm=TRUE),
-                                         .groups="drop")
+                    dataEX_test = dplyr::rename(dataEX_test,
+                                                !!var:=var_h)
                 }
+                dataEX_test = 
+                    dplyr::summarise(
+                               dplyr::group_by(dataEX_test,
+                                               code, EXP, GCM,
+                                               RCM, BC),
+                               !!var:=mean(get(var),
+                                           na.rm=TRUE),
+                               .groups="drop")
+                dataEX_test = 
+                    dplyr::summarise(dplyr::group_by(dataEX_test,
+                                                     code, EXP,
+                                                     GCM, RCM),
+                                     !!var:=mean(get(var),
+                                                 na.rm=TRUE),
+                                     .groups="drop")
+                dataEX_test = 
+                    dplyr::summarise(dplyr::group_by(dataEX_test,
+                                                     code, EXP),
+                                     !!var:=mean(get(var),
+                                                 na.rm=TRUE),
+                                     .groups="drop")
             } else {
                 dataEX_test = ASHE::read_tibble(var_path)    
             }
