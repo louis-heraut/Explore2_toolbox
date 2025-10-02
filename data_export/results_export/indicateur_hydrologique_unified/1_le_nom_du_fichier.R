@@ -33,7 +33,7 @@
 #
 #     Indicator_TimeFrequency_StartTime-EndTime_Domain_ModelXXX.nc
 
-if (!is_SAFRAN & !is_delta) {
+if (!is_SAFRAN & !is_delta & !compute_mean) {
     projection_ok =
         grepl(dataEX$GCM[1], meta_projection$gcm) &
         grepl(dataEX$RCM[1], meta_projection$rcm)
@@ -67,7 +67,7 @@ if (grepl(Month_pattern, var)) {
 if (is_TRACC) {
     NCf$title.03.StartTime_EndTime = rwl
 } else {
-    if (is_delta) {
+    if (is_delta | compute_mean) {
         NCf$title.03.StartTime_EndTime =
             paste0(lubridate::year(futur_period[1]),
                    "-",
@@ -80,7 +80,7 @@ if (is_TRACC) {
 }
 
 ## 4. Opération temporelle ___________________________________________
-if (is_delta) {
+if (is_delta | compute_mean) {
     NCf$title.04.TIMEoperation = "TIMEavg"
 } else {
     NCf$title.04.TIMEoperation = "TIMEseries"
@@ -96,7 +96,7 @@ NCf$title.06.GEOdata = "GEOstation"
 
 ## 7. Domain _________________________________________________________
 #  Couverture spatiale des données
-if (is_delta) {
+if (is_delta | compute_mean) {
     NCf$title.07.Domain = "FR-METRO"
 } else {
     if (dataEX$HM[1] == "EROS") {
@@ -126,10 +126,11 @@ if (is_SAFRAN) {
     NCf$title.09.Bc_Inst_Method = ""
 } else {
     if (is_TRACC) {
-        NCf$title.09.Bc_Inst_Method =
-            BC_name[BC_short == dataEX$BC[1]]
+        NCf$title.09.Bc_Inst_Method = "MF-ADAMONT"
     } else {
-        if (is_delta) {
+        if (only_ADAMONT) {
+            NCf$title.09.Bc_Inst_Method = "MF-ADAMONT"
+        } else if (is_delta | compute_mean) {
             NCf$title.09.Bc_Inst_Method = "ENSavg"
         } else {
             NCf$title.09.Bc_Inst_Method =
@@ -147,7 +148,7 @@ NCf$title.10.Experiment = dataEX$EXP[1]
 if (is_SAFRAN) {
     NCf$title.11.GCM_Model = ""
 } else {
-    if (is_delta) {
+    if (is_delta | compute_mean) {
         NCf$title.11.GCM_Model = "ENSavg"
     } else {
         NCf$title.11.GCM_Model =
@@ -160,7 +161,7 @@ if (is_SAFRAN) {
 if (is_SAFRAN) {
     NCf$title.12.RCM_Model = ""
 } else {
-    if (is_delta) {
+    if (is_delta | compute_mean) {
         NCf$title.12.RCM_Model = "ENSavg"
     } else {
         NCf$title.12.RCM_Model =
@@ -170,7 +171,7 @@ if (is_SAFRAN) {
 
 ## 13. HYDRO-Inst-Model _______________________________________________
 # Identifiant du HYDRO = Institut-Modèle
-if (is_delta) {
+if (is_delta | compute_mean) {
     NCf$title.13.HYDRO_Inst_Model = "ENSavg"
 } else {
     NCf$title.13.HYDRO_Inst_Model = dataEX$HM[1]

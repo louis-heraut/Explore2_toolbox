@@ -58,7 +58,7 @@ if (is_SAFRAN) {
 
     
 } else {
-    if (is_delta) {
+    if (is_delta | compute_mean) {
         NCf$global.01.ensemble_stat = "ENSavg"
 ### 1.3. driving_* ___________________________________________________
         NCf$global.05.driving_experiment_name = dataEX$EXP[1]
@@ -152,7 +152,7 @@ if (is_SAFRAN) {
     # ensemble de données.
     NCf$global.18.product = "bias-correction"
 
-    if (is_delta & !is_TRACC) {
+    if ((is_delta | compute_mean) & !is_TRACC & !only_ADAMONT) {
         NCf$global.19.bc_ensemble_stat = "ENSavg"
         
     } else {
@@ -218,7 +218,6 @@ if (is_SAFRAN) {
 }
 
 
-
 ## 3. MODÉLISATION HYDROLOGIQUE ______________________________________
 ### 3.1. product _____________________________________________________
 # Une chaîne de caractères indiquant la méthodologie pour créer cet
@@ -229,7 +228,7 @@ NCf$global.31.product = "hydro-climatique"
 # Identification du projet
 NCf$global.32.hy_projet_id = "EXPLORE2"
 
-if (is_delta) {
+if (is_delta | compute_mean) {
     NCf$global.33.hy_ensemble_stat = "ENSavg"
 } else {
 ### 3.3. hy_institute_id _____________________________________________
@@ -284,12 +283,12 @@ if (NCf$title.02.TimeFrequency == 'mon') {
 NCf$global.42.indicator_time_operation = "TIMEseries"
 if (is_TRACC) {
     NCf$global.43.indicator_time_span = "20 years"
-    if (!is_delta) {
+    if (!is_delta & !compute_mean) {
         NCf$global.44.indicator_time_central_year = central_year
         NCf$global.45.indicator_time_range = range_year
     }
 } else {
-    if (is_delta) {
+    if (is_delta | compute_mean) {
         NCf$global.43.indicator_time_span = "30 years"
         NCf$global.45.indicator_time_range = range_year
     }

@@ -33,23 +33,30 @@ library(ncdf4)
 # VERIF CHAIN TO REMOVE SAFRAN
 ####
 is_TRACC =
-    TRUE
-    # FALSE
+    # TRUE
+    FALSE
 
 is_delta =
     TRUE
     # FALSE
 
-only_rcp85_and_ADAMONT =
+compute_mean =
     # TRUE
     FALSE
-
-###
-# VERIF CHAIN TO REMOVE SAFRAN
-###
+    
+only_rcp85 =
+    # TRUE
+    FALSE
+only_ADAMONT =
+    # TRUE
+    FALSE
 without_SAFRAN =
     TRUE
     # FALSE
+###
+# VERIF CHAIN TO REMOVE SAFRAN
+###
+
 
 Variable = c(
     # "Q05A_yr", "Q10A_yr", "Q50A_yr", "Q90A_yr", "Q95A_yr",
@@ -57,25 +64,31 @@ Variable = c(
     # "tQJXA_yr", "tVCX10_yr", "tVCX3_yr",
     # "dtFlood_yr",
     # "QA_yr",
-    # "QS_"
+    # "QMNA_yr",
+    # "startLF_summer", "centerLF_summer", "endLF_summer", "dtLF_summer", 
+    # "startLF_yr", "centerLF_yr", "endLF_yr", "dtLF_yr",
+    # "VCN10_yr", "VCN3_yr", "VCN30_yr",
+    # "VCN10_summer", "VCN3_summer", "VCN30_summer",
+
+    # "QS_"    
     "QM_"
-    # "QMNA",
-    # "startLF_summer", "centerLF_summer", "endLF_summer", 
-    # "startLF", "centerLF", "endLF",
-    # "dtLF_summer", "dtLF",
-    # "VCN10", "VCN3", "VCN30",
-    # "VCN10_summer", "VCN3_summer", "VCN30_summer"
+    
+    # "QSA_"
+    # "QMA_"
 )
 
 historical = c("1976-01-01", "2005-08-31")
 Futurs = list(
+    # "historical"=historical    
     H1=c("2021-01-01", "2050-12-31"),
     H2=c("2041-01-01", "2070-12-31"),
     H3=c("2070-01-01", "2099-12-31")
 )
 
 
-MPI = "file"
+MPI =
+    # "file"
+    "variable"
 verbose = TRUE
 
 
@@ -117,6 +130,16 @@ if (is_TRACC) {
 if (is_delta) {
     out_dir = paste0(out_dir, "_delta")
 }
+if (compute_mean) {
+    out_dir = paste0(out_dir, "_mean")
+}
+if (only_ADAMONT) {
+    out_dir = paste0(out_dir, "_ADAMONT")
+}
+if (only_rcp85) {
+    out_dir = paste0(out_dir, "_rcp85")
+}
+
 
 
 ## MPI _______________________________________________________________
@@ -202,8 +225,20 @@ data_Paths = list.files(data_dirpath,
                         recursive=TRUE)
 data_Paths = data_Paths[!grepl("debit_narratifs_all", data_Paths)]
 
-Results_path = list.files(results_dirpath, recursive=TRUE,
+Results_path = list.files(results_dirpath,
+                          pattern=".parquet",
+                          recursive=TRUE,
                           full.names=TRUE)
+
+if (only_rcp85) {
+    Results_path = Results_path[grepl("rcp85", Results_path)]
+}
+if (only_ADAMONT) {
+    Results_path = Results_path[grepl("ADAMONT", Results_path)]
+}
+if (without_SAFRAN) {
+    Results_path = Results_path[!grepl("[_]SAFRAN[_]", Results_path)]
+}
 Chain_dirpath = gsub("([.]fst)|([.]parquet)", "", basename(Results_path))
 
 clean_chain = function(chain) {
@@ -224,13 +259,12 @@ clean_chain = function(chain) {
 Chain_dirpath = sapply(strsplit(Chain_dirpath, "_"), clean_chain)
 Chain_dirpath = unique(Chain_dirpath)
 
-if (is_delta) {    
+if (is_delta | compute_mean) {    
     # ClimateChain_dirpath_ALL = gsub("[_]$", "",
     # stringr::str_extract(Chain_dirpath, ".*[_]"))
     ClimateChain_dirpath_ALL = gsub("[_].*", "", Chain_dirpath)
     ClimateChain_dirpath = unique(ClimateChain_dirpath_ALL)
     Chain_dirpath = ClimateChain_dirpath
-    
 }
 
 get_var = function (var_path) {
@@ -259,15 +293,6 @@ if (is_TRACC) {
     # "rcp85_MPI-ESM-LR_REMO_ADAMONT"
     # "historical-rcp85_CNRM-CM5_ALADIN63_ADAMONT_CTRIP"
 ###
-
-
-if (only_rcp85_and_ADAMONT) {
-    Chain_dirpath = Chain_dirpath[grepl("rcp85", Chain_dirpath) &
-                                  grepl("ADAMONT", Chain_dirpath)]
-}
-if (without_SAFRAN) {
-    Chain_dirpath = Chain_dirpath[!grepl("^SAFRAN", Chain_dirpath)]
-}    
 
 nChain_dirpath = length(Chain_dirpath)
 
@@ -396,9 +421,6 @@ filter_code = function (dataEX) {
 }
 
 
-# stop()
-
-
 ## PROCESS ___________________________________________________________
 for (i in 1:nChain_dirpath) {
     if (nChain_dirpath == 0) {
@@ -410,19 +432,6 @@ for (i in 1:nChain_dirpath) {
     post(paste0("* ", i, " -> ",
                 round(i/nChain_dirpath*100, 1), "% : ",
                 chain_dirpath))
-
-    # if (is_delta) {
-    #     Projection_chain =
-    #         dplyr::filter(Projection,
-    #                       grepl(chain_dirpath,
-    #                             gsub("historical-", "",
-    #                                  Projection$Chain)))
-    # } else {
-    #     Projection_chain =
-    #         dplyr::filter(Projection,
-    #                       gsub("historical-", "",
-    #                            Projection$Chain) == chain_dirpath)
-    # }
 
     Projection_chain =
         dplyr::filter(Projection,
@@ -448,24 +457,13 @@ for (i in 1:nChain_dirpath) {
             post(paste0("** ", j, " -> ",
                         round(j/nWL*100, 1), "% : ", rwl))
         } else {
-            if (is_delta) {
+            if (is_delta | compute_mean) {
                 futur = names(Futurs)[j]
                 futur_period = Futurs[[j]]
                 post(paste0("** ", j, " -> ",
                             round(j/nWL*100, 1), "% : ", futur))
             }
         }
-        
-        # Var_path =
-        #     Results_path[grepl(rwl, basename(Results_path)) &
-        #                  grepl(regexp, basename(Results_path))]
-        # Var = sapply(strsplit(basename(Var_path), "_"), get_var)
-        
-        # Ok = grepl(Variable_pattern, Var)
-        # Var_path = Var_path[Ok]
-        # Var = Var[Ok]
-        
-        # nVar_path = length(Var_path)
 
         if (is_TRACC) {
             Ok_res = grepl(rwl, basename(Results_path)) &
@@ -490,11 +488,34 @@ for (i in 1:nChain_dirpath) {
         Var_path_list =
             lapply(Var, function (x) Var_path[Var_ALL == x])
         names(Var_path_list) = Var
-
         nVar_path_list = length(Var_path_list)
+        
+        if (MPI == "variable") {            
+            start = ceiling(seq(1, nVar_path_list,
+                                by=(nVar_path_list/size)))
+            if (any(diff(start) == 0)) {
+                start = 1:nVar_path_list
+                end = start
+            } else {
+                end = c(start[-1]-1, nVar_path_list)
+            }
+            if (rank == 0) {
+                post(paste0(paste0("rank ", 0:(size-1), " get ",
+                                   end-start+1, " files"),
+                            collapse="    "))
+            }
+            if (Rrank+1 > nVar_path_list) {
+                Var_path_list = NULL
+            } else {
+                Var_path_list =
+                    Var_path_list[start[Rrank+1]:end[Rrank+1]]
+            }
+        }
+        nVar_path_list = length(Var_path_list)
+        
         is_month_done = FALSE
 
-
+        
         for (k in 1:nVar_path_list) {
             var = names(Var_path_list)[k]
             if (is_TRACC) {
@@ -516,23 +537,51 @@ for (i in 1:nChain_dirpath) {
                 next
             }
 
+            # if (is_TRACC) {
+            #     if (is_delta) {
+            #         Ok_meta = grepl(rwl, metaEX_ALL$variable_en) &
+            #             grepl(var, metaEX_ALL$variable_en)
+            #     } else {
+            #         Ok_meta = grepl(var, metaEX_ALL$variable_en) &
+            #             !grepl("delta", metaEX_ALL$variable_en)
+            #     }
+            # } else {
+            #     if (is_delta) {
+            #         Ok_meta = grepl(futur, metaEX_ALL$variable_en) &
+            #             grepl(var, metaEX_ALL$variable_en)
+            #     } else {
+            #         Ok_meta = grepl(var, metaEX_ALL$variable_en) &
+            #             !grepl("delta", metaEX_ALL$variable_en)
+            #     }
+            # }
             if (is_TRACC) {
                 if (is_delta) {
-                    Ok_meta = grepl(rwl, metaEX_ALL$variable_en) &
-                        grepl(var, metaEX_ALL$variable_en)
+                    Ok_meta = metaEX_ALL$variable_en == var_rwl
                 } else {
-                    Ok_meta = grepl(var, metaEX_ALL$variable_en)
+                    Ok_meta = metaEX_ALL$variable_en == var
                 }
             } else {
                 if (is_delta) {
-                    Ok_meta = grepl(futur, metaEX_ALL$variable_en) &
-                        grepl(var, metaEX_ALL$variable_en)
+                    Ok_meta = metaEX_ALL$variable_en == var_h
                 } else {
-                    Ok_meta = grepl(var, metaEX_ALL$variable_en)
+                    Ok_meta = metaEX_ALL$variable_en == var
                 }
             }
+            
             metaEX_var = metaEX_ALL[Ok_meta,]
             metaEX_var$variable_en = var
+
+            filter_period = function (path, var) {
+                tbl = ASHE::read_tibble(path)
+                dplyr::summarise(
+                           dplyr::group_by(
+                                      dplyr::filter(tbl,
+                                                    futur_period[1] <= date &
+                                                    date <= futur_period[2]),
+                                      code, EXP, GCM, RCM, BC, HM),
+                           !!var:=mean(get(var), na.rm=TRUE),
+                           .groups="drop")
+            }
             
             if (!is_month_done & grepl(Month_pattern, var)) {
                 var_no_pattern =
@@ -540,6 +589,7 @@ for (i in 1:nChain_dirpath) {
                          gsub(Month_pattern, "",
                               metaEX_var$variable_en))
                 var_no_pattern = gsub("QMA", "QA", var_no_pattern)
+                var_no_pattern = gsub("QM", "QA", var_no_pattern)
                 metaEX_var$variable_en = var_no_pattern
                 metaEX_var$name_en = gsub("each .*", "each month",
                                           metaEX_var$name_en)
@@ -549,14 +599,6 @@ for (i in 1:nChain_dirpath) {
                 
                 dataEX = dplyr::tibble()
                 for (var_month in var_Month) {
-                    # var_month_file = unlist(strsplit(basename(var_path), "_"))
-                    # var_month_file =
-                    #     paste0(var_month_file[3:length(var_month_file)],
-                    #            collapse="_")
-                    # var_month_file = paste0(var_month, "_", var_month_file)
-                    
-                    # var_month_path = file.path(dirname(var_path),
-                    #                            var_month_file)
                     var_month_file = strsplit(basename(var_path), "_")
                     var_month_file = sapply(var_month_file,
                                             function (x) paste0(x[3:length(x)],
@@ -566,49 +608,65 @@ for (i in 1:nChain_dirpath) {
                     var_month_path = file.path(dirname(var_path),
                                                var_month_file)
                     
-                    if (is_delta) {
-                        dataEX_tmp_list = lapply(var_month_path,
-                                                 ASHE::read_tibble)
+                    if (is_delta | compute_mean) {
+                        if (compute_mean) {
+                            dataEX_tmp_list = lapply(var_month_path,
+                                                     filter_period,
+                                                     var=var_month)
+                        } else {
+                            dataEX_tmp_list = lapply(var_month_path,
+                                                     ASHE::read_tibble)
+                        }
                         dataEX_tmp = purrr::reduce(dataEX_tmp_list,
                                                    dplyr::bind_rows)
                         dataEX_tmp = add_chain(dataEX_tmp)
                         dataEX_tmp = filter_code(dataEX_tmp)
-                        if (is_TRACC) {
-                            var_month_rwl = paste0(var_month, "_", rwl)
-                            dataEX_tmp =
-                                dplyr::rename(dataEX_tmp,
-                                              !!var_month:=var_month_rwl)
-                        } else {
-                            var_month_h = paste0(var_month, "_", futur)
-                            dataEX_tmp =
-                                dplyr::rename(dataEX_tmp,
-                                              !!var_month:=var_month_h)
+                        
+                        if (!compute_mean) {
+                            if (is_TRACC) {
+                                var_month_rwl = paste0(var_month,
+                                                       "_", rwl)
+                                dataEX_tmp =
+                                    dplyr::rename(dataEX_tmp,
+                                                  !!var_month:=
+                                                      var_month_rwl)
+                            } else {
+                                var_month_h = paste0(var_month,
+                                                     "_", futur)
+                                dataEX_tmp =
+                                    dplyr::rename(dataEX_tmp,
+                                                  !!var_month:=
+                                                      var_month_h)
+                            }
                         }
                         dataEX_tmp = 
                             dplyr::summarise(
                                        dplyr::group_by(dataEX_tmp,
-                                                       code, EXP, GCM,
-                                                       RCM, BC),
+                                                       code, EXP,
+                                                       GCM, RCM, BC),
                                        !!var_month:=mean(get(var_month),
                                                          na.rm=TRUE),
                                        .groups="drop")
                         dataEX_tmp = 
-                            dplyr::summarise(dplyr::group_by(dataEX_tmp,
-                                                             code, EXP,
-                                                             GCM, RCM),
-                                             !!var_month:=mean(get(var_month),
-                                                               na.rm=TRUE),
-                                             .groups="drop")
+                            dplyr::summarise(
+                                       dplyr::group_by(dataEX_tmp,
+                                                       code, EXP,
+                                                       GCM, RCM),
+                                       !!var_month:=mean(get(var_month),
+                                                         na.rm=TRUE),
+                                       .groups="drop")
                         dataEX_tmp = 
-                            dplyr::summarise(dplyr::group_by(dataEX_tmp,
-                                                             code, EXP),
-                                             !!var_month:=mean(get(var_month),
-                                                               na.rm=TRUE),
-                                             .groups="drop")
-                        id_month = which(Month == gsub(".*[_]", "", var_month))
+                            dplyr::summarise(
+                                       dplyr::group_by(dataEX_tmp,
+                                                       code, EXP),
+                                       !!var_month:=mean(get(var_month),
+                                                         na.rm=TRUE),
+                                       .groups="drop")
+                        id_month = which(Month == gsub(".*[_]", "",
+                                                       var_month))
                         dataEX_tmp$date =
                             as.Date(paste0("1970-", id_month, "-01"))
-                        
+
                     } else {
                         dataEX_tmp = ASHE::read_tibble(var_month_path)
                         dataEX_tmp = add_chain(dataEX_tmp)
@@ -629,37 +687,49 @@ for (i in 1:nChain_dirpath) {
                 timestep = "month"
 
             } else {
-                if (is_delta) {
-                    dataEX_list = lapply(var_path, ASHE::read_tibble)
+                if (is_delta | compute_mean) {
+                    if (compute_mean) {
+                        dataEX_list = lapply(var_path, filter_period,
+                                             var=var)
+                    } else {
+                        dataEX_list = lapply(var_path, ASHE::read_tibble)
+                    }
                     dataEX = purrr::reduce(dataEX_list, dplyr::bind_rows)
                     dataEX = add_chain(dataEX)
                     dataEX = filter_code(dataEX)
-                    if (is_TRACC) {
-                        dataEX = dplyr::rename(dataEX, !!var:=var_rwl)
-                    } else {
-                        dataEX = dplyr::rename(dataEX, !!var:=var_h)
+
+                    if (!compute_mean) {
+                        if (is_TRACC) {
+                            dataEX = dplyr::rename(dataEX,
+                                                   !!var:=var_rwl)
+                        } else {
+                            dataEX = dplyr::rename(dataEX,
+                                                   !!var:=var_h)
+                        }
                     }
                     dataEX = 
                         dplyr::summarise(
                                    dplyr::group_by(dataEX,
-                                                   code, EXP, GCM,
-                                                   RCM, BC),
+                                                   code, EXP,
+                                                   GCM, RCM, BC),
                                    !!var:=mean(get(var),
                                                na.rm=TRUE),
                                    .groups="drop")
                     dataEX = 
-                        dplyr::summarise(dplyr::group_by(dataEX,
-                                                         code, EXP,
-                                                         GCM, RCM),
-                                         !!var:=mean(get(var),
-                                                     na.rm=TRUE),
-                                         .groups="drop")
+                        dplyr::summarise(
+                                   dplyr::group_by(dataEX,
+                                                   code, EXP,
+                                                   GCM, RCM),
+                                   !!var:=mean(get(var),
+                                               na.rm=TRUE),
+                                   .groups="drop")
                     dataEX = 
-                        dplyr::summarise(dplyr::group_by(dataEX,
-                                                         code, EXP),
-                                         !!var:=mean(get(var),
-                                                     na.rm=TRUE),
-                                         .groups="drop")
+                        dplyr::summarise(
+                                   dplyr::group_by(dataEX,
+                                                   code, EXP),
+                                   !!var:=mean(get(var),
+                                               na.rm=TRUE),
+                                   .groups="drop")
                 } else {
                     dataEX = ASHE::read_tibble(var_path)
                     dataEX = add_chain(dataEX)
@@ -676,7 +746,7 @@ for (i in 1:nChain_dirpath) {
                                       start=sampling_period[1],
                                       end=sampling_period[2])
                                         
-                } else if (is_delta) {
+                } else if (is_delta | compute_mean) {
                     SamplingPeriod = sampling_period
                 } else {
                     SamplingPeriod =
@@ -688,7 +758,7 @@ for (i in 1:nChain_dirpath) {
                                               "%m-%d"))
                 }
                 
-                if (is_delta) { 
+                if (is_delta | compute_mean) { 
                     timestep = "year" #############
                 } else {
                     dataEX$date =
@@ -720,6 +790,8 @@ for (i in 1:nChain_dirpath) {
                     season = stringr::str_extract(var, Season_pattern)
                     var_no_pattern = gsub(Season_pattern, "", var)
                     var_no_pattern = gsub("QSA", "QA", var_no_pattern)
+                    var_no_pattern = gsub("QS", "QA", var_no_pattern)
+                    
                 } else {
                     season = NULL
                     # var_no_pattern = var
@@ -736,7 +808,7 @@ for (i in 1:nChain_dirpath) {
             }
 
             if (is_TRACC) {
-                if (!is_delta) {
+                if (!is_delta & !compute_mean) {
                     Year_range = range(lubridate::year(Date))
                     duration = Year_range[2] - Year_range[1] + 1
                     if (duration < 20 & !is_delta) {
@@ -756,7 +828,7 @@ for (i in 1:nChain_dirpath) {
                                         lubridate::year(max(Date)))
                 }
             } else {
-                if (is_delta) {
+                if (is_delta | compute_mean) {
                     range_year =
                         paste0(lubridate::year(futur_period[1]),
                                "-",
@@ -766,7 +838,7 @@ for (i in 1:nChain_dirpath) {
 
             Code = levels(factor(dataEX$code))
 
-            if (is_delta) {
+            if (is_delta | compute_mean) {
                 if (grepl(Month_pattern, var)) {
                     dataEX_matrix =
                         dplyr::select(dataEX, code, date,
@@ -793,10 +865,13 @@ for (i in 1:nChain_dirpath) {
                 dataEX_matrix = dplyr::select(dataEX_matrix, -date)
                 dataEX_matrix = t(as.matrix(dataEX_matrix))
             }
+            dataEX_matrix[is.infinite(dataEX_matrix)] = NaN
 
-
+            
             ###
             initialise_NCf()
+
+            # stop()
             
             list_path = list.files(script_dirpath,
                                    pattern='*.R$',
@@ -811,6 +886,8 @@ for (i in 1:nChain_dirpath) {
                 dir.create(out_dir)
             }
 
+            # stop()
+
             NC_path = generate_NCf(out_dir=out_dir,
                                    chunksizes_list=NULL,
                                    return_path=TRUE,
@@ -824,7 +901,7 @@ for (i in 1:nChain_dirpath) {
             code_test = Code[runif(1, 1, length(Code))]
             Code_test = ncdf4::ncvar_get(NC_test, "code")
 
-            if (!is_delta) {
+            if (!is_delta & !compute_mean) {
                 if (is_TRACC) {
                     Date_test = ncdf4::ncatt_get(NC_test, 0,
                                                  "indicator_time_range")$value
@@ -851,10 +928,16 @@ for (i in 1:nChain_dirpath) {
             }
             
             id_code = which(Code_test == code_test)
-            if (is_delta) {
-                Value_test =
-                    ncdf4::ncvar_get(NC_test,
-                                     metaEX_var$variable_en)[id_code]
+            if (is_delta | compute_mean) {
+                if (timestep == "month") {
+                    Value_test =
+                        ncdf4::ncvar_get(NC_test,
+                                         metaEX_var$variable_en)[id_code, 4]
+                } else {
+                    Value_test =
+                        ncdf4::ncvar_get(NC_test,
+                                         metaEX_var$variable_en)[id_code]
+                }
             } else {
                 Value_test =
                     ncdf4::ncvar_get(NC_test,
@@ -862,18 +945,25 @@ for (i in 1:nChain_dirpath) {
             }
             Value_test[!is.finite(Value_test)] = NA
 
-            if (is_delta) {
-                dataEX_test_list = lapply(var_path, ASHE::read_tibble)
+            if (is_delta | compute_mean) {
+                if (compute_mean) {
+                    dataEX_test_list = lapply(var_path, filter_period,
+                                              var=var)
+                } else {
+                    dataEX_test_list = lapply(var_path, ASHE::read_tibble)
+                }
                 dataEX_test = purrr::reduce(dataEX_test_list,
                                             dplyr::bind_rows)
                 dataEX_test = add_chain(dataEX_test)
                 dataEX_test = filter_code(dataEX_test)
-                if (is_TRACC) {
-                    dataEX_test = dplyr::rename(dataEX_test,
-                                                !!var:=var_rwl)
-                } else {
-                    dataEX_test = dplyr::rename(dataEX_test,
+                if (!compute_mean) {
+                    if (is_TRACC) {
+                        dataEX_test = dplyr::rename(dataEX_test,
+                                                    !!var:=var_rwl)
+                    } else {
+                        dataEX_test = dplyr::rename(dataEX_test,
                                                 !!var:=var_h)
+                    }
                 }
                 dataEX_test = 
                     dplyr::summarise(
@@ -899,22 +989,22 @@ for (i in 1:nChain_dirpath) {
             } else {
                 dataEX_test = ASHE::read_tibble(var_path)    
             }
-            if (!is_TRACC & !is_delta) {
+            if (!is_TRACC & !is_delta & !compute_mean) {
                 dataEX_test = dplyr::filter(dataEX_test,
                                             date_min <= date)
             }
             dataEX_test = dplyr::filter(dataEX_test,
                                         code==code_test)
 
-            if (!is_delta) {
-                if (grepl("QMA_apr", var)) {
+            if (!is_delta & !compute_mean) {
+                if (timestep == "month") {
                     ok = lubridate::month(Date_test) == 4
                     Date_test = Date_test[ok]
                     Value_test = Value_test[ok]
                 }
                 Date_test = Date_test[!is.na(Value_test)]
                 dataEX_test$year = lubridate::year(dataEX_test$date)
-                if (!grepl("QMA_apr", var)) {
+                if (timestep != "month") {
                     dataEX_test$date =
                         as.Date(paste0(dataEX_test$year, "-01-01"))
                 }
@@ -922,13 +1012,13 @@ for (i in 1:nChain_dirpath) {
             Value_test = Value_test[!is.na(Value_test)]
             
             valEX = dataEX_test[[var]]
-            if (!is_delta) {
+            if (!is_delta & !compute_mean) {
                 DateEX = dataEX_test$date
                 DateEX = DateEX[!is.na(valEX)]
             }
             valEX = valEX[!is.na(valEX)]
 
-            if (!is_delta) {
+            if (!is_delta & !compute_mean) {
                 ok1 = all(DateEX == Date_test)
             } else {
                 ok1 = TRUE
@@ -938,7 +1028,7 @@ for (i in 1:nChain_dirpath) {
 
             meta_ALL_test = dplyr::filter(meta_ALL, code==code_test)
 
-            if (!is_delta) {
+            if (!is_delta & !compute_mean) {
                 surface_test =
                     ncdf4::ncvar_get(NC_test,
                                      "topologicalSurface_model")[id_code]
@@ -947,7 +1037,7 @@ for (i in 1:nChain_dirpath) {
             }
             
             # there is some NA in surface in SAFRAN MORDOR-SD
-            if (!is_SAFRAN & !is_delta) {
+            if (!is_SAFRAN & !is_delta & !compute_mean) {
                 ok3 = all.equal(meta_ALL_test[[surface_var]],
                                 surface_test,
                                 0.1)

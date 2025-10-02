@@ -1,16 +1,6 @@
 
 Attachement du package : ‘dplyr’
 
-
-Attachement du package : ‘dplyr’
-
-
-Attachement du package : ‘dplyr’
-
-Les objets suivants sont masqués depuis ‘package:stats’:
-
-    filter, lag
-
 Les objets suivants sont masqués depuis ‘package:stats’:
 
     filter, lag
@@ -19,13 +9,12 @@ Les objets suivants sont masqués depuis ‘package:base’:
 
     intersect, setdiff, setequal, union
 
+
+Attachement du package : ‘dplyr’
+
 Les objets suivants sont masqués depuis ‘package:stats’:
 
     filter, lag
-
-Les objets suivants sont masqués depuis ‘package:base’:
-
-    intersect, setdiff, setequal, union
 
 Les objets suivants sont masqués depuis ‘package:base’:
 
@@ -53,8 +42,28 @@ Les objets suivants sont masqués depuis ‘package:base’:
 
     intersect, setdiff, setequal, union
 
-Message d'avis :
-Using an external vector in selections was deprecated in tidyselect 1.1.0.
+
+Attachement du package : ‘dplyr’
+
+Les objets suivants sont masqués depuis ‘package:stats’:
+
+    filter, lag
+
+Les objets suivants sont masqués depuis ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Messages d'avis :
+1: Using an external vector in selections was deprecated in tidyselect 1.1.0.
+ℹ Please use `all_of()` or `any_of()` instead.
+  # Was:
+  data %>% select(var_h)
+
+  # Now:
+  data %>% select(all_of(var_h))
+
+See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>. 
+2: Using an external vector in selections was deprecated in tidyselect 1.1.0.
 ℹ Please use `all_of()` or `any_of()` instead.
   # Was:
   data %>% select(var)
@@ -63,7 +72,79 @@ Using an external vector in selections was deprecated in tidyselect 1.1.0.
   data %>% select(all_of(var))
 
 See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>. 
-Il y a eu 50 avis ou plus (utilisez warnings() pour voir les 50 premiers)
-Il y a eu 50 avis ou plus (utilisez warnings() pour voir les 50 premiers)
-Il y a eu 50 avis ou plus (utilisez warnings() pour voir les 50 premiers)
-Il y a eu 50 avis ou plus (utilisez warnings() pour voir les 50 premiers)
+Messages d'avis :
+1: Using an external vector in selections was deprecated in tidyselect 1.1.0.
+ℹ Please use `all_of()` or `any_of()` instead.
+  # Was:
+  data %>% select(var_h)
+
+  # Now:
+  data %>% select(all_of(var_h))
+
+See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>. 
+2: Using an external vector in selections was deprecated in tidyselect 1.1.0.
+ℹ Please use `all_of()` or `any_of()` instead.
+  # Was:
+  data %>% select(var)
+
+  # Now:
+  data %>% select(all_of(var))
+
+See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>. 
+Messages d'avis :
+1: Using an external vector in selections was deprecated in tidyselect 1.1.0.
+ℹ Please use `all_of()` or `any_of()` instead.
+  # Was:
+  data %>% select(var_h)
+
+  # Now:
+  data %>% select(all_of(var_h))
+
+See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>. 
+2: Using an external vector in selections was deprecated in tidyselect 1.1.0.
+ℹ Please use `all_of()` or `any_of()` instead.
+  # Was:
+  data %>% select(var)
+
+  # Now:
+  data %>% select(all_of(var))
+
+See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>. 
+Messages d'avis :
+1: Using an external vector in selections was deprecated in tidyselect 1.1.0.
+ℹ Please use `all_of()` or `any_of()` instead.
+  # Was:
+  data %>% select(var_h)
+
+  # Now:
+  data %>% select(all_of(var_h))
+
+See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>. 
+2: Using an external vector in selections was deprecated in tidyselect 1.1.0.
+ℹ Please use `all_of()` or `any_of()` instead.
+  # Was:
+  data %>% select(var)
+
+  # Now:
+  data %>% select(all_of(var))
+
+See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>. 
+Messages d'avis :
+1: Using an external vector in selections was deprecated in tidyselect 1.1.0.
+ℹ Please use `all_of()` or `any_of()` instead.
+  # Was:
+  data %>% select(var_h)
+
+  # Now:
+  data %>% select(all_of(var_h))
+
+See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>. 
+2: Using an external vector in selections was deprecated in tidyselect 1.1.0.
+ℹ Please use `all_of()` or `any_of()` instead.
+  # Was:
+  data %>% select(var)
+
+  # Now:
+  data %>% select(all_of(var))
+
+See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>. 

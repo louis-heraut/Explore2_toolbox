@@ -51,10 +51,7 @@
 #                     l’extraction de la variable
 
 
-
-
 ## 1. SAMPLING PERIOD ________________________________________________
-# if (!is_delta) {
 NCf$sampling_period.name = "sampling_period"
 NCf$sampling_period.dimension = "sampling_period_strlen, station"
 NCf$sampling_period.precision = "char"
@@ -70,8 +67,6 @@ NCf$sampling_period.01.long_name = "sampling period"
 NCf$sampling_period_strlen.name = "sampling_period_strlen"
 NCf$sampling_period_strlen.value = 1:max(nchar(NCf$sampling_period.value))
 NCf$sampling_period_strlen.is_nchar_dimension = TRUE
-# }
-
 
 
 ## 2. VARIABLES ______________________________________________________
